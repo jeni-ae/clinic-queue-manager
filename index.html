@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clinic Queue Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f4;--surf:#fff;--ink:#17242d;--mute:#5c6d77;--line:#d3dce1;--teal:#0b4f57;--amber:#ffc857;--green:#2f8f6b;--red:#c0453a;--focus:#1769e0;
+--h:"Sora",system-ui,sans-serif;--b:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.55 var(--b)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 40px}
+header{padding:34px 0 20px}
+h1{font:800 clamp(1.9rem,5vw,2.8rem)/1.1 var(--h);letter-spacing:-.02em;margin:0 0 8px;color:var(--teal)}
+header p{margin:0;color:var(--mute);max-width:52ch}
+.board{background:var(--teal);color:#fff;border-radius:16px;padding:26px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.board .lbl{font-size:.95rem;opacity:.8}
+.board .no{font:800 clamp(3rem,10vw,5.5rem)/1 var(--h);color:var(--amber);letter-spacing:-.02em;margin:4px 0}
+.board .who{font:600 1.25rem var(--h)}
+.board .svc{opacity:.85}
+.board .btns{display:flex;flex-direction:column;gap:10px;min-width:170px}
+.btn{font:600 1rem var(--b);cursor:pointer;border-radius:10px;padding:12px 18px;border:1.5px solid transparent}
+.btn.call{background:var(--amber);color:#2a2000}
+.btn.call:hover{filter:brightness(1.07)}
+.btn.line{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.btn.line:hover{border-color:#fff}
+.btn.pri{background:var(--teal);color:#fff;width:100%}
+.btn.pri:hover{filter:brightness(1.15)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--ink);padding:8px 14px;font-weight:500}
+.btn.ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.facts{display:flex;gap:28px;flex-wrap:wrap;margin:18px 2px 22px;color:var(--mute)}
+.facts b{color:var(--ink);font:700 1.15rem var(--h);margin-right:6px}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:22px;align-items:start}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:22px}
+h2{font:700 1.2rem var(--h);margin:0 0 14px}
+label{display:block;font-size:.9rem;font-weight:500;margin:12px 0 4px}
+input,select{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+.msg{min-height:1.4em;margin:10px 0 0;font-size:.92rem}.ok{color:var(--green)}.err{color:var(--red)}
+.row2{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap}
+.link{background:none;border:0;padding:4px 0;font:inherit;color:var(--mute);text-decoration:underline;cursor:pointer}
+.link:hover{color:var(--red)}
+.tk{display:grid;grid-template-columns:78px 1fr auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-left:6px solid var(--amber);border-radius:10px;margin-bottom:10px;background:var(--bg)}
+.tk.next{border-left-color:var(--teal);background:#e4f1f2}
+.tk .n{font:700 1.15rem var(--h)}
+.tk .nm{font-weight:600}.tk .sv{font-size:.88rem;color:var(--mute)}
+.tk .w{font-size:.9rem;color:var(--mute);text-align:right}
+.tk.next .w{color:var(--teal);font-weight:600}
+.tk.new{animation:pop .9s ease-out 1}
+@keyframes pop{from{box-shadow:0 0 0 4px rgba(255,200,87,.8)}to{box-shadow:0 0 0 4px rgba(255,200,87,0)}}
+.empty{padding:26px 8px;text-align:center;color:var(--mute)}
+.empty b{display:block;color:var(--ink);font:700 1.1rem var(--h);margin-bottom:4px}
+.slots{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.slot{border:1.5px solid var(--line);border-radius:8px;min-height:62px;padding:4px;text-align:center;font:600 .82rem var(--h);display:flex;flex-direction:column;justify-content:center;background:var(--surf)}
+.slot.full{background:#fff4d6;border-color:var(--amber)}
+.slot i{font:600 .72rem var(--b);font-style:normal;color:var(--mute)}
+.slot .tag{font:700 .72rem var(--b);color:var(--teal)}
+.idx{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:4px;text-align:center;font-size:.78rem;color:var(--mute)}
+details{margin-top:22px;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:4px 22px}
+summary{cursor:pointer;font:700 1.1rem var(--h);padding:16px 0}
+details p,details li{max-width:70ch;color:var(--mute)}
+details code,.panel code{background:var(--bg);padding:1px 6px;border-radius:5px;font-size:.88em}
+.log{margin:0;padding-left:18px;color:var(--mute);font-size:.92rem}
+footer{text-align:center;color:var(--mute);font-size:.88rem;padding:6px 20px 36px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.board{grid-template-columns:1fr}.board .btns{flex-direction:row}.board .btns .btn{flex:1}.slots,.idx{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:480px){.tk{grid-template-columns:64px 1fr}.tk .w{grid-column:1/-1;text-align:left}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Clinic Queue Manager</h1>
+  <p>Patients join the line and are called in the order they arrived. The line is stored in a queue.</p>
+</header>
+
+<section class="board" aria-label="Now serving">
+  <div aria-live="polite">
+    <div class="lbl">Now serving</div>
+    <div class="no" id="bNo">-</div>
+    <div class="who" id="bWho">Nobody called yet</div>
+    <div class="svc" id="bSvc">Press Call next to start.</div>
+  </div>
+  <div class="btns">
+    <button class="btn call" id="nextBtn">Call next patient</button>
+    <button class="btn line" id="skipBtn">Mark no-show</button>
+  </div>
+</section>
+
+<div class="facts" id="facts"></div>
+
+<div class="grid">
+  <section class="panel">
+    <h2>Join the line</h2>
+    <label for="nm">Patient name</label>
+    <input id="nm" type="text" placeholder="e.g. Ama Mensah" autocomplete="off">
+    <label for="sv">Service</label>
+    <select id="sv"><option>Consultation</option><option>Pharmacy</option><option>Laboratory</option><option>Records</option></select>
+    <label for="mins">Minutes per patient (for wait estimates)</label>
+    <input id="mins" type="number" min="1" max="60" value="5">
+    <div style="margin-top:16px"><button class="btn pri" id="joinBtn">Add to queue</button></div>
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    <div class="row2"><button class="btn ghost" id="sampleBtn">Add sample patients</button><button class="link" id="resetBtn">Reset everything</button></div>
+  </section>
+
+  <section class="panel">
+    <h2>Waiting line <span id="cnt" style="font:500 .95rem var(--b);color:var(--mute)"></span></h2>
+    <div id="list"></div>
+    <h2 style="margin-top:22px">Recently served</h2>
+    <ol class="log" id="log"></ol>
+  </section>
+</div>
+
+<section class="panel" style="margin-top:22px">
+  <h2>Inside the queue: a circular array with 10 slots</h2>
+  <div class="slots" id="slots"></div>
+  <div class="idx" id="idx"></div>
+</section>
+
+<details>
+  <summary>How the queue works</summary>
+  <p>A queue is first in, first out (FIFO): the person who joins first is served first. New people join at the <b>rear</b> and are called from the <b>front</b>.</p>
+  <ul>
+    <li><code>enqueue</code> adds a patient at the rear. If all 10 slots are used, the queue is full.</li>
+    <li><code>dequeue</code> removes the patient at the front. If no one is waiting, the queue is empty.</li>
+    <li><code>peek</code> shows who is next without removing them.</li>
+    <li>The array is circular: after slot 9 the rear wraps back to slot 0, so freed slots are reused.</li>
+  </ul>
+</details>
+</div>
+<footer>Built for a data structures assignment, with help from AI.</footer>
+
+<script>
+// ===== THE QUEUE: circular array =====
+const CAP = 10;
+class CircularQueue {
+  constructor(cap) { this.items = new Array(cap).fill(null); this.cap = cap; this.head = 0; this.size = 0; }
+  isEmpty() { return this.size === 0; }
+  isFull()  { return this.size === this.cap; }
+  enqueue(x) {                                   // add at the rear
+    if (this.isFull()) return false;
+    this.items[(this.head + this.size) % this.cap] = x;
+    this.size++; return true;
+  }
+  dequeue() {                                    // remove from the front
+    if (this.isEmpty()) return null;
+    const x = this.items[this.head];
+    this.items[this.head] = null;
+    this.head = (this.head + 1) % this.cap;
+    this.size--; return x;
+  }
+  peek() { return this.isEmpty() ? null : this.items[this.head]; }
+  toArray() { const a = []; for (let i = 0; i < this.size; i++) a.push(this.items[(this.head + i) % this.cap]); return a; }
+}
+
+let q = new CircularQueue(CAP), counter = 0, current = null, served = [], missed = 0, waits = [], newNo = null;
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ticketNo = n => "C-" + String(n).padStart(3, "0");
+const mmss = ms => { const s = Math.round(ms / 1000); return Math.floor(s / 60) + "m " + String(s % 60).padStart(2, "0") + "s"; };
+function say(t, ok) { $("msg").textContent = t; $("msg").className = "msg " + (ok ? "ok" : "err"); }
+
+function join(name, service) {
+  if (q.isFull()) { say("The line is full (" + CAP + " patients). Call someone before adding more.", false); return false; }
+  const t = { no: ticketNo(++counter), name: name, service: service, at: Date.now() };
+  q.enqueue(t); newNo = t.no; return true;
+}
+function callNext() {
+  const t = q.dequeue();
+  if (!t) { say("No one is waiting. Add a patient first.", false); return; }
+  if (current) served.push(current);
+  waits.push(Date.now() - t.at);
+  current = t; say("Called " + t.name + ".", true); render();
+}
+function noShow() {
+  if (!current) { say("No patient is being served.", false); return; }
+  missed++; say(current.name + " marked as no-show.", true); current = null; render();
+}
+
+function renderLog() {
+  const last = served.slice(-5).reverse();
+  $("log").innerHTML = last.length ? last.map(t => "<li>" + t.no + " " + esc(t.name) + "</li>").join("") : "<li style='list-style:none;margin-left:-18px'>No one has finished yet.</li>";
+}
+
+function render() {
+  const arr = q.toArray(), mins = Math.max(1, +$("mins").value || 5);
+  $("bNo").textContent = current ? current.no : "-";
+  $("bWho").textContent = current ? current.name : "Nobody called yet";
+  $("bSvc").textContent = current ? current.service : "Press Call next to start.";
+  $("nextBtn").disabled = q.isEmpty(); $("skipBtn").disabled = !current;
+
+  const avg = waits.length ? mmss(waits.reduce((a, b) => a + b, 0) / waits.length) : "-";
+  $("facts").innerHTML = "<span><b>" + arr.length + "</b>waiting</span><span><b>" + (served.length + (current ? 1 : 0)) + "</b>called</span><span><b>" + missed + "</b>no-shows</span><span><b>" + avg + "</b>average wait</span>";
+  $("cnt").textContent = arr.length ? "(" + arr.length + " of " + CAP + ")" : "";
+
+  let h = "";
+  for (let i = 0; i < arr.length; i++) {         // traverse the queue front to rear
+    const t = arr[i];
+    h += "<div class='tk" + (i === 0 ? " next" : "") + (t.no === newNo ? " new" : "") + "'><div class='n'>" + t.no + "</div><div><div class='nm'>" + esc(t.name) + "</div><div class='sv'>" + esc(t.service) + "</div></div><div class='w'>" + (i === 0 ? "Next, about " + mins + " min" : "Position " + (i + 1) + ", about " + (i + 1) * mins + " min") + "</div></div>";
+  }
+  renderLog(); $("list").innerHTML = h || "<div class='empty'><b>The line is empty</b>Add a patient with the form, or add sample patients to try it out.</div>";
+
+  let s = "", x = "";
+  const rear = (q.head + q.size - 1) % CAP;
+  for (let i = 0; i < CAP; i++) {                // draw the raw array
+    const t = q.items[i];
+    const tag = !q.isEmpty() && i === q.head ? "front" : "";
+    const rtag = !q.isEmpty() && i === rear ? "rear" : "";
+    s += "<div class='slot" + (t ? " full" : "") + "'>" + (t ? t.no : "<i>empty</i>") + "<span class='tag'>" + [tag, rtag].filter(Boolean).join(" and ") + "</span></div>";
+    x += "<div>" + i + "</div>";
+  }
+  $("slots").innerHTML = s; $("idx").innerHTML = x;
+  newNo = null;
+}
+
+$("joinBtn").onclick = function () {
+  const name = $("nm").value.trim();
+  if (!name) { say("Enter the patient's name.", false); $("nm").focus(); return; }
+  if (join(name, $("sv").value)) { say("Added " + name + " to the line.", true); $("nm").value = ""; $("nm").focus(); }
+  render();
+};
+$("nextBtn").onclick = callNext;
+$("skipBtn").onclick = noShow;
+$("mins").oninput = render;
+$("sampleBtn").onclick = function () {
+  const s = [["Ama Mensah","Consultation"],["Kofi Boateng","Pharmacy"],["Esi Owusu","Laboratory"],["Yaw Asante","Consultation"],["Akosua Darko","Records"]];
+  for (let i = 0; i < s.length; i++) if (!join(s[i][0], s[i][1])) break;
+  say("Sample patients added.", true); render();
+};
+$("resetBtn").onclick = function () {
+  if ((q.size || current || served.length) && !confirm("Clear the whole queue and history?")) return;
+  q = new CircularQueue(CAP); counter = 0; current = null; served = []; missed = 0; waits = []; say("Everything cleared.", true); render();
+};
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "nm") $("joinBtn").click(); });
+render();
+</script>
+</body>
+</html>
